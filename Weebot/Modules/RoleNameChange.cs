@@ -5,16 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Weebot.Modules
 {
     public class RoleNameChange : ModuleBase<SocketCommandContext>
     {
-        private SocketRole roleToEdit;
+        private Timer timer;
+        private static int timerInterval = 10000;
+        private Random random = new Random();
 
-        private List<String> firstPart = new List<string>();
-        private List<String> secondPart = new List<string>();
-        private List<String> thirdPart = new List<string>();
+        private static SocketRole roleToEdit;
+        private static List<String> firstPart = new List<string>();
+        private static List<String> secondPart = new List<string>();
+        private static List<String> thirdPart = new List<string>();
 
         [Command("Help"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task HelpMessageAsync()
@@ -50,6 +54,13 @@ namespace Weebot.Modules
                 .AddField("AddThirdString", "(Optional) Add string to third list.")
                 .AddField("GetThirdStringList", "Get third list.")
                 .AddField("RemoveThirdStringList <index>", "Remove from third list at index.")
+                .WithColor(Color.Magenta);
+            await ReplyAsync("", false, builder.Build());
+            builder = new EmbedBuilder();
+
+            builder.WithTitle("Timer")
+                .AddField("StartNewTimer", "Start a new timer for the role name change.")
+                .AddField("SetTimerInterval", "Set an interval for the timer in ms. (default: 12 hours)")
                 .WithColor(Color.Magenta);
             await ReplyAsync("", false, builder.Build());
         }
@@ -106,12 +117,12 @@ namespace Weebot.Modules
             {
                 if (roleToEdit.IsMentionable)
                 {
-                    await ReplyAsync(roleToEdit.Mention);
+                    await ReplyAsync($"{roleToEdit.Mention} is currently assigned!");
                 }
                 else
                 {
-                    await ReplyAsync(roleToEdit.Name);
-                } 
+                    await ReplyAsync($"{roleToEdit.Name} is currently assigned!");
+                }
             }
             else
             {
@@ -122,12 +133,12 @@ namespace Weebot.Modules
 
         #region First Part
         [Command("AddFirstString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddFirstStringAsync([Remainder] String name)
+        public async Task AddFirstStringAsync(string name)
         {
             var user = Context.User;
             firstPart.Add(name);
 
-            await ReplyAsync($"{user.Mention} has added {name} to be the first part of the role to be edited!");
+            await ReplyAsync($"{user.Mention} has added \"{name}\" to be the first part of the role to be edited!");
         }
 
         [Command("GetFirstStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
@@ -149,12 +160,12 @@ namespace Weebot.Modules
 
         #region Second Part
         [Command("AddSecondString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddSecondStringAsync([Remainder] String name)
+        public async Task AddSecondStringAsync(string name)
         {
             var user = Context.User;
             secondPart.Add(name);
 
-            await ReplyAsync($"{user.Mention} has added {name} to be the first part of the role to be edited!");
+            await ReplyAsync($"{user.Mention} has added \"{name}\" to be the second part of the role to be edited!");
         }
 
         [Command("GetSecondStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
@@ -176,12 +187,12 @@ namespace Weebot.Modules
 
         #region Third Part
         [Command("AddThirdString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddThirdStringAsync([Remainder] String name)
+        public async Task AddThirdStringAsync(string name)
         {
             var user = Context.User;
             thirdPart.Add(name);
 
-            await ReplyAsync($"{user.Mention} has added {name} to be the first part of the role to be edited!");
+            await ReplyAsync($"{user.Mention} has added \"{name}\" to be the third part of the role to be edited!");
         }
 
         [Command("GetThirdStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
@@ -198,6 +209,68 @@ namespace Weebot.Modules
             }
 
             await ReplyAsync("", false, builder.Build());
+        }
+        #endregion
+
+        #region Timer
+        [Command("StartNewTimer"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task StartNewTimerAsync()
+        {
+            if (firstPart.Count > 0 && roleToEdit != null)
+            {
+                timer = new Timer();
+                timer.Interval = timerInterval; // 12 hour interval
+                timer.Elapsed += OnTimerElapsed;
+                timer.AutoReset = true;
+                timer.Enabled = true;
+                await ReplyAsync("A new timer has been started.");
+            }
+            else if (firstPart.Count == 0 && roleToEdit != null)
+            {
+                await ReplyAsync("Please add some names in the first list. \"owo.help\" for more info.");
+            }
+            else if (firstPart.Count > 0 && roleToEdit == null)
+            {
+                await ReplyAsync("Please set a role to be edited. \"owo.help\" for more info.");
+            }
+            else if (firstPart.Count == 0 && roleToEdit == null)
+            {
+                await ReplyAsync("Please add some names in the first list and set a role to be edited. \"owo.help\" for more info.");
+            }
+        }
+
+        [Command("SetTimerInterval"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task SetTimerIntervalAsync(int value)
+        {
+            var user = Context.User;
+            timerInterval = value;
+
+            await ReplyAsync($"{user.Mention} set the timer interval set to {timerInterval} ms.");
+        }
+
+        private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            string first, second, third;
+            StringBuilder builder = new StringBuilder();
+
+            first = firstPart[random.Next(0, firstPart.Count)].ToString();
+            builder.Append(first);
+
+            if (secondPart.Count > 0)
+            {
+                second = secondPart[random.Next(0, secondPart.Count)].ToString();
+                builder.Append(second);
+            }
+
+            if (thirdPart.Count > 0)
+            {
+                third = thirdPart[random.Next(0, thirdPart.Count)].ToString();
+                builder.Append(third);
+            }
+
+            await ReplyAsync($"Role name: {builder.ToString()}");
+
+            await roleToEdit.ModifyAsync(role => role.Name = builder.ToString());
         }
         #endregion
     }

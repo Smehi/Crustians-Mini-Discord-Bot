@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
+using System.Timers;
 using System.Threading.Tasks;
 
 namespace Weebot
