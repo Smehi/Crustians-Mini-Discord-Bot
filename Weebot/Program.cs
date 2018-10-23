@@ -61,7 +61,7 @@ namespace Weebot
 
             int argPosition = 0;
 
-            if (message.HasStringPrefix("owo!", ref argPosition) || message.HasMentionPrefix(discordClient.CurrentUser, ref argPosition))
+            if (message.HasStringPrefix("owo.", ref argPosition) || message.HasMentionPrefix(discordClient.CurrentUser, ref argPosition))
             {
                 var context = new SocketCommandContext(discordClient, message);
 
