@@ -16,54 +16,95 @@ namespace Weebot.Modules
         private Random random = new Random();
 
         private static SocketRole roleToEdit;
-        private static List<String> firstPart = new List<string>();
-        private static List<String> secondPart = new List<string>();
-        private static List<String> thirdPart = new List<string>();
+        private static List<string> firstStringSet = new List<string>();
+        private static List<string> secondStringSet = new List<string>();
+        private static List<string> thirdStringSet = new List<string>();
 
         [Command("Help"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task HelpMessageAsync()
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle("Roles")
-                .AddField("SetRole <@role>", "Set the role that is going to get the name changed.")
-                .AddField("GetRoles", "Get the roles in the server.")
-                .AddField("SetRole <ID>", "Set the role, with the index from the role list, that is going to get the name changed.")
-                .AddField("GetCurrentRole", "Gets the current role that is assigned.")
+            builder.WithTitle("Commands")
+                .AddField("Misc",               "`LoadSave`" +
+                                                "`WipeSave`")         
+                .AddField("Role commands",      "`SetRole <@role>` " +
+                                                "`GetRoles` " +
+                                                "`SetRole <ID>` " +
+                                                "`GetCurrentRole`")
+                .AddField("First String Set",   "`AddToFirstString <string>` " +
+                                                "`GetFirstStringSet` " +
+                                                "`RemoveFromFirstStringSet <index>`" +
+                                                "`WipeFirstStringSet`")
+                .AddField("Second String Set",  "`AddToSecondString <string>` " +
+                                                "`GetSecondStringSet` " +
+                                                "`RemoveFromSecondStringSet <index>`" +
+                                                "`WipeSecondStringSet`")
+                .AddField("Third String Set",   "`AddToThirdString <string>` " +
+                                                "`GetThirdStringSet` " +
+                                                "`RemoveFromThirdStringSet <index>`" +
+                                                "`WipeThirdStringSet`")
+                .AddField("Timer",              "`StartNewTimer` " +
+                                                "`SetTimerInterval <time>`")
                 .WithColor(Color.Magenta);
-            await ReplyAsync("", false, builder.Build());
-            builder = new EmbedBuilder();
 
-            builder.WithTitle("First Part")
-                .AddField("AddFirstString", "Add string to first list.")
-                .AddField("GetFirstStringList", "Get first list.")
-                .AddField("RemoveFirstStringList <index>", "Remove from first list at index.")
-                .WithColor(Color.Magenta);
-            await ReplyAsync("", false, builder.Build());
-            builder = new EmbedBuilder();
-
-            builder.WithTitle("Second Part")
-                .AddField("AddSecondString", "(Optional) Add string to second list.")
-                .AddField("GetSecondStringList", "Get second list.")
-                .AddField("RemoveSecondStringList <index>", "Remove from second list at index.")
-                .WithColor(Color.Magenta);
-            await ReplyAsync("", false, builder.Build());
-            builder = new EmbedBuilder();
-
-            builder.WithTitle("Third Part")
-                .AddField("AddThirdString", "(Optional) Add string to third list.")
-                .AddField("GetThirdStringList", "Get third list.")
-                .AddField("RemoveThirdStringList <index>", "Remove from third list at index.")
-                .WithColor(Color.Magenta);
-            await ReplyAsync("", false, builder.Build());
-            builder = new EmbedBuilder();
-
-            builder.WithTitle("Timer")
-                .AddField("StartNewTimer", "Start a new timer for the role name change.")
-                .AddField("SetTimerInterval", "Set an interval for the timer in ms. (default: 12 hours)")
-                .WithColor(Color.Magenta);
             await ReplyAsync("", false, builder.Build());
         }
+
+        #region Misc
+        [Command("LoadSave"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task LoadSaveAsync()
+        {
+            if (DataStorage.PairHasKey("roleToEdit"))
+            {
+                roleToEdit = Context.Guild.GetRole(Convert.ToUInt64(DataStorage.GetKeyValue("roleToEdit")));
+            }
+
+            if (DataStorage.PairHasKey("timerInterval"))
+            {
+                timerInterval = Convert.ToInt32(DataStorage.GetKeyValue("timerInterval"));
+            }
+
+            if (DataStorage.PairHasKey("firstStringSetCount"))
+            {
+                int count = Convert.ToInt32(DataStorage.GetKeyValue("firstStringSetCount"));
+                for (int i = 0; i < count; i++)
+                {
+                    firstStringSet.Add(DataStorage.GetKeyValue("firstStringSet" + i));
+                }
+            }
+
+            if (DataStorage.PairHasKey("secondStringSetCount"))
+            {
+                int count = Convert.ToInt32(DataStorage.GetKeyValue("secondStringSetCount"));
+                for (int i = 0; i < count; i++)
+                {
+                    secondStringSet.Add(DataStorage.GetKeyValue("secondStringSet" + i));
+                }
+            }
+
+            if (DataStorage.PairHasKey("thirdStringSetCount"))
+            {
+                int count = Convert.ToInt32(DataStorage.GetKeyValue("thirdStringSetCount"));
+                for (int i = 0; i < count; i++)
+                {
+                    thirdStringSet.Add(DataStorage.GetKeyValue("thirdStringSet" + i));
+                }
+            }
+
+            await ReplyAsync("Loaded previously set role, timer interval and string sets");
+            await Task.CompletedTask;
+        }
+
+        [Command("WipeSave"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task WipeSaveAsync()
+        {
+            DataStorage.WipeFile();
+
+            await ReplyAsync("Save file wiped.");
+            await Task.CompletedTask;
+        }
+        #endregion
 
         #region Roles
         [Command("SetRole"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
@@ -71,6 +112,8 @@ namespace Weebot.Modules
         {
             var user = Context.User;
             roleToEdit = role;
+
+            DataStorage.AddPairToStorage("roleToEdit", roleToEdit.Id.ToString());
 
             await ReplyAsync($"{user.Mention} has set {roleToEdit.Mention} to be edited!");
         }
@@ -99,6 +142,8 @@ namespace Weebot.Modules
             var user = Context.User;
             var guild = Context.Guild;
             roleToEdit = guild.GetRole(roleID);
+
+            DataStorage.AddPairToStorage("roleToEdit", roleToEdit.Id.ToString());
 
             if (roleToEdit.IsMentionable)
             {
@@ -131,84 +176,273 @@ namespace Weebot.Modules
         }
         #endregion
 
-        #region First Part
-        [Command("AddFirstString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddFirstStringAsync(string name)
+        #region First String Set
+        [Command("AddToFirstString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToFirstStringAsync(string name)
         {
             var user = Context.User;
-            firstPart.Add(name);
+            firstStringSet.Add(name);
+
+            DataStorage.AddPairToStorage(string.Format("firstStringSet" + (firstStringSet.Count - 1)), firstStringSet[firstStringSet.Count-1]);
+            DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the first part of the role to be edited!");
         }
 
-        [Command("GetFirstStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetFirstStringListAsync()
+        [Command("GetFirstStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task GetFirstStringSetAsync()
+        {
+            EmbedBuilder builder = new EmbedBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
+
+            builder.WithTitle("First string set")
+                .WithColor(Color.Magenta);
+
+            for (int i = 0; i < firstStringSet.Count; i++)
+            {
+                stringBuilder.Append($"**{firstStringSet[i]} - ** `{i}`");
+                stringBuilder.AppendLine();
+            }
+
+            builder.WithDescription(stringBuilder.ToString());
+
+            await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("RemoveFromFirstStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task RemoveFromFirstStringSetAsync(int index)
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle("First part")
-                .WithColor(Color.Magenta);
-
-            for (int i = 0; i < firstPart.Count; i++)
+            if (index >= 0 && index < firstStringSet.Count)
             {
-                builder.AddField($"{firstPart[i]}", $"{i}");
+                builder.WithTitle($"String \"{firstStringSet[index].ToString()}\" removed")
+                .WithColor(Color.Magenta);
+                
+                // Dirty but it works
+                // Remove all pairs
+                for (int i = 0; i < firstStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage(string.Format("firstStringSet" + i));
+                }
+
+                firstStringSet.RemoveAt(index);
+
+                // Readd all pairs
+                for (int i = 0; i < firstStringSet.Count; i++)
+                {
+                    DataStorage.AddPairToStorage(string.Format("firstStringSet" + i), firstStringSet[i]);
+                }
+
+                DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
+            }
+            else
+            {
+                builder.WithTitle("Index is not valid, please try again!")
+                .WithColor(Color.Magenta);
             }
 
             await ReplyAsync("", false, builder.Build());
         }
+
+        [Command("WipeFirstStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task WipeFirstStringSetAsync()
+        {
+            if (firstStringSet.Count > 0)
+            {
+                for (int i = 0; i < firstStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage("firstStringSet" + i);
+                    firstStringSet.RemoveAt(i);
+                }    
+            }
+            else
+            {
+                await ReplyAsync("Set is already empty!");
+            }
+
+            DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
+            await ReplyAsync("Emptied the set!");
+        }
         #endregion
 
-        #region Second Part
-        [Command("AddSecondString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddSecondStringAsync(string name)
+        #region Second String Set
+        [Command("AddToSecondString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToSecondStringAsync(string name)
         {
             var user = Context.User;
-            secondPart.Add(name);
+            secondStringSet.Add(name);
+
+            DataStorage.AddPairToStorage(string.Format("secondStringSet" + (secondStringSet.Count - 1)), secondStringSet[secondStringSet.Count - 1]);
+            DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the second part of the role to be edited!");
         }
 
-        [Command("GetSecondStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetSecondStringListAsync()
+        [Command("GetSecondStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task GetSecondStringSetAsync()
+        {
+            EmbedBuilder builder = new EmbedBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
+
+            builder.WithTitle("Second string set")
+                .WithColor(Color.Magenta);
+
+            for (int i = 0; i < secondStringSet.Count; i++)
+            {
+                stringBuilder.Append($"**{secondStringSet[i]} - ** `{i}`");
+                stringBuilder.AppendLine();
+            }
+
+            builder.WithDescription(stringBuilder.ToString());
+
+            await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("RemoveFromSecondStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task RemoveFromSecondStringSetAsync(int index)
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle("Second part")
-                .WithColor(Color.Magenta);
-
-            for (int i = 0; i < firstPart.Count; i++)
+            if (index >= 0 && index < secondStringSet.Count)
             {
-                builder.AddField($"{secondPart[i]}", $"{i}");
+                builder.WithTitle($"String \"{secondStringSet[index].ToString()}\" removed")
+                .WithColor(Color.Magenta);
+                
+                // Dirty but it works
+                // Remove all pairs
+                for (int i = 0; i < secondStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage(string.Format("secondStringSet" + i));
+                }
+
+                secondStringSet.RemoveAt(index);
+
+                // Readd all pairs
+                for (int i = 0; i < secondStringSet.Count; i++)
+                {
+                    DataStorage.AddPairToStorage(string.Format("secondStringSet" + i), secondStringSet[i]);
+                }
+
+                DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
+            }
+            else
+            {
+                builder.WithTitle("Index is not valid, please try again!")
+                .WithColor(Color.Magenta);
             }
 
             await ReplyAsync("", false, builder.Build());
         }
+
+        [Command("WipeSecondStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task WipeSecondStringSetAsync()
+        {
+            if (secondStringSet.Count > 0)
+            {
+                for (int i = 0; i < secondStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage("secondStringSet" + i);
+                    secondStringSet.RemoveAt(i);
+                }
+            }
+            else
+            {
+                await ReplyAsync("Set is already empty!");
+            }
+
+            DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
+            await ReplyAsync("Emptied the set!");
+        }
         #endregion
 
-        #region Third Part
-        [Command("AddThirdString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddThirdStringAsync(string name)
+        #region Third String Set
+        [Command("AddToThirdString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToThirdStringAsync(string name)
         {
             var user = Context.User;
-            thirdPart.Add(name);
+            thirdStringSet.Add(name);
+
+            DataStorage.AddPairToStorage(string.Format("thirdStringSet" + (thirdStringSet.Count - 1)), thirdStringSet[thirdStringSet.Count - 1]);
+            DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the third part of the role to be edited!");
         }
 
-        [Command("GetThirdStringList"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task GetThirdStringListAsync()
+        [Command("GetThirdStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task GetThirdStringSetAsync()
+        {
+            EmbedBuilder builder = new EmbedBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
+
+            builder.WithTitle("Third string set")
+                .WithColor(Color.Magenta);
+
+            for (int i = 0; i < thirdStringSet.Count; i++)
+            {
+                stringBuilder.Append($"**{thirdStringSet[i]} - ** `{i}`");
+                stringBuilder.AppendLine();
+            }
+
+            builder.WithDescription(stringBuilder.ToString());
+
+            await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("RemoveFromThirdStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task RemoveFromThirdStringSetAsync(int index)
         {
             EmbedBuilder builder = new EmbedBuilder();
 
-            builder.WithTitle("Third part")
-                .WithColor(Color.Magenta);
-
-            for (int i = 0; i < firstPart.Count; i++)
+            if (index >= 0 && index < thirdStringSet.Count)
             {
-                builder.AddField($"{thirdPart[i]}", $"{i}");
+                builder.WithTitle($"String \"{thirdStringSet[index].ToString()}\" removed")
+                .WithColor(Color.Magenta);
+                
+                // Dirty but it works
+                // Remove all pairs
+                for (int i = 0; i < thirdStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage(string.Format("thirdStringSet" + i));
+                }
+
+                thirdStringSet.RemoveAt(index);
+
+                // Readd all pairs
+                for (int i = 0; i < thirdStringSet.Count; i++)
+                {
+                    DataStorage.AddPairToStorage(string.Format("thirdStringSet" + i), thirdStringSet[i]);
+                }
+
+                DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
+            }
+            else
+            {
+                builder.WithTitle("Index is not valid, please try again!")
+                .WithColor(Color.Magenta);
             }
 
             await ReplyAsync("", false, builder.Build());
+        }
+
+        [Command("WipeThirdStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task WipeThirdStringSetAsync()
+        {
+            if (thirdStringSet.Count > 0)
+            {
+                for (int i = 0; i < thirdStringSet.Count; i++)
+                {
+                    DataStorage.RemovePairFromStorage("thirdStringSet" + i);
+                    thirdStringSet.RemoveAt(i);
+                }
+            }
+            else
+            {
+                await ReplyAsync("Set is already empty!");
+            }
+
+            DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
+            await ReplyAsync("Emptied the set!");
         }
         #endregion
 
@@ -216,7 +450,7 @@ namespace Weebot.Modules
         [Command("StartNewTimer"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task StartNewTimerAsync()
         {
-            if (firstPart.Count > 0 && roleToEdit != null)
+            if (firstStringSet.Count > 0 && roleToEdit != null)
             {
                 timer = new Timer();
                 timer.Interval = timerInterval; // 12 hour interval
@@ -225,17 +459,17 @@ namespace Weebot.Modules
                 timer.Enabled = true;
                 await ReplyAsync("A new timer has been started.");
             }
-            else if (firstPart.Count == 0 && roleToEdit != null)
+            else if (firstStringSet.Count == 0 && roleToEdit != null)
             {
-                await ReplyAsync("Please add some names in the first list. \"owo.help\" for more info.");
+                await ReplyAsync("Please add some names in the first set. \"owo.help\" for more info.");
             }
-            else if (firstPart.Count > 0 && roleToEdit == null)
+            else if (firstStringSet.Count > 0 && roleToEdit == null)
             {
                 await ReplyAsync("Please set a role to be edited. \"owo.help\" for more info.");
             }
-            else if (firstPart.Count == 0 && roleToEdit == null)
+            else if (firstStringSet.Count == 0 && roleToEdit == null)
             {
-                await ReplyAsync("Please add some names in the first list and set a role to be edited. \"owo.help\" for more info.");
+                await ReplyAsync("Please add some names in the first set and set a role to be edited. \"owo.help\" for more info.");
             }
         }
 
@@ -245,6 +479,8 @@ namespace Weebot.Modules
             var user = Context.User;
             timerInterval = value;
 
+            DataStorage.AddPairToStorage("timerInterval", timerInterval.ToString());
+
             await ReplyAsync($"{user.Mention} set the timer interval set to {timerInterval} ms.");
         }
 
@@ -253,18 +489,18 @@ namespace Weebot.Modules
             string first, second, third;
             StringBuilder builder = new StringBuilder();
 
-            first = firstPart[random.Next(0, firstPart.Count)].ToString();
+            first = firstStringSet[random.Next(0, firstStringSet.Count)].ToString();
             builder.Append(first);
 
-            if (secondPart.Count > 0)
+            if (secondStringSet.Count > 0)
             {
-                second = secondPart[random.Next(0, secondPart.Count)].ToString();
+                second = secondStringSet[random.Next(0, secondStringSet.Count)].ToString();
                 builder.Append(second);
             }
 
-            if (thirdPart.Count > 0)
+            if (thirdStringSet.Count > 0)
             {
-                third = thirdPart[random.Next(0, thirdPart.Count)].ToString();
+                third = thirdStringSet[random.Next(0, thirdStringSet.Count)].ToString();
                 builder.Append(third);
             }
 

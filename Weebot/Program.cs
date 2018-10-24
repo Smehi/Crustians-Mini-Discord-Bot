@@ -6,6 +6,7 @@ using System;
 using System.Reflection;
 using System.Timers;
 using System.Threading.Tasks;
+using Weebot.Modules;
 
 namespace Weebot
 {
@@ -27,7 +28,7 @@ namespace Weebot
                 .AddSingleton(commands)
                 .BuildServiceProvider();
 
-            string botToken = "NTA0Mjg0OTM4ODU4NjU5ODYy.DrC1IQ.wwrxQs1WCHbrEdR42S2Kh6ihgTY";
+            string botToken = Config.bot.token;
 
             discordClient.Log += Log;
 
@@ -62,7 +63,7 @@ namespace Weebot
 
             int argPosition = 0;
 
-            if (message.HasStringPrefix("owo.", ref argPosition) || message.HasMentionPrefix(discordClient.CurrentUser, ref argPosition))
+            if (message.HasStringPrefix(Config.bot.prefix, ref argPosition) || message.HasMentionPrefix(discordClient.CurrentUser, ref argPosition))
             {
                 var context = new SocketCommandContext(discordClient, message);
 
