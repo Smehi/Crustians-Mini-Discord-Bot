@@ -26,21 +26,20 @@ namespace Weebot.Modules
             EmbedBuilder builder = new EmbedBuilder();
 
             builder.WithTitle("Commands")
-                .AddField("Misc",               "`LoadSave`" +
-                                                "`WipeSave`")         
+                .AddField("Misc",               "`LoadSave`")         
                 .AddField("Role commands",      "`SetRole <@role>` " +
                                                 "`GetRoles` " +
                                                 "`SetRole <ID>` " +
                                                 "`GetCurrentRole`")
-                .AddField("First String Set",   "`AddToFirstString <string>` " +
+                .AddField("First String Set",   "`AddToFirstStringSet <string>` " +
                                                 "`GetFirstStringSet` " +
                                                 "`RemoveFromFirstStringSet <index>`" +
                                                 "`WipeFirstStringSet`")
-                .AddField("Second String Set",  "`AddToSecondString <string>` " +
+                .AddField("Second String Set",  "`AddToSecondStringSet <string>` " +
                                                 "`GetSecondStringSet` " +
                                                 "`RemoveFromSecondStringSet <index>`" +
                                                 "`WipeSecondStringSet`")
-                .AddField("Third String Set",   "`AddToThirdString <string>` " +
+                .AddField("Third String Set",   "`AddToThirdStringSet <string>` " +
                                                 "`GetThirdStringSet` " +
                                                 "`RemoveFromThirdStringSet <index>`" +
                                                 "`WipeThirdStringSet`")
@@ -93,15 +92,6 @@ namespace Weebot.Modules
             }
 
             await ReplyAsync("Loaded previously set role, timer interval and string sets");
-            await Task.CompletedTask;
-        }
-
-        [Command("WipeSave"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task WipeSaveAsync()
-        {
-            DataStorage.WipeFile();
-
-            await ReplyAsync("Save file wiped.");
             await Task.CompletedTask;
         }
         #endregion
@@ -177,13 +167,17 @@ namespace Weebot.Modules
         #endregion
 
         #region First String Set
-        [Command("AddToFirstString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddToFirstStringAsync(string name)
+        [Command("AddToFirstStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToFirstSetStringAsync(string name)
         {
             var user = Context.User;
             firstStringSet.Add(name);
 
-            DataStorage.AddPairToStorage(string.Format("firstStringSet" + (firstStringSet.Count - 1)), firstStringSet[firstStringSet.Count-1]);
+            for (int i = 0; i < firstStringSet.Count; i++)
+            {
+                DataStorage.AddPairToStorage(string.Format("firstStringSet" + i), firstStringSet[i]);
+            }
+
             DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the first part of the role to be edited!");
@@ -248,32 +242,34 @@ namespace Weebot.Modules
         [Command("WipeFirstStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task WipeFirstStringSetAsync()
         {
-            if (firstStringSet.Count > 0)
-            {
-                for (int i = 0; i < firstStringSet.Count; i++)
-                {
-                    DataStorage.RemovePairFromStorage("firstStringSet" + i);
-                }    
-            }
-            else
+            if (firstStringSet.Count == 0)
             {
                 await ReplyAsync("Set is already empty!");
             }
 
+            for (int i = 0; i < firstStringSet.Count; i++)
+            {
+                DataStorage.RemovePairFromStorage("firstStringSet" + i);
+            }
+
             firstStringSet.Clear();
-            DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
+            DataStorage.RemovePairFromStorage("firstStringSetCount");
             await ReplyAsync("Emptied the set!");
         }
         #endregion
 
         #region Second String Set
-        [Command("AddToSecondString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddToSecondStringAsync(string name)
+        [Command("AddToSecondStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToSecondStringSetAsync(string name)
         {
             var user = Context.User;
             secondStringSet.Add(name);
 
-            DataStorage.AddPairToStorage(string.Format("secondStringSet" + (secondStringSet.Count - 1)), secondStringSet[secondStringSet.Count - 1]);
+            for (int i = 0; i < secondStringSet.Count; i++)
+            {
+                DataStorage.AddPairToStorage(string.Format("secondStringSet" + i), secondStringSet[i]);
+            }
+
             DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the second part of the role to be edited!");
@@ -338,32 +334,34 @@ namespace Weebot.Modules
         [Command("WipeSecondStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task WipeSecondStringSetAsync()
         {
-            if (secondStringSet.Count > 0)
-            {
-                for (int i = 0; i < secondStringSet.Count; i++)
-                {
-                    DataStorage.RemovePairFromStorage("secondStringSet" + i);
-                }
-            }
-            else
+            if (secondStringSet.Count == 0)
             {
                 await ReplyAsync("Set is already empty!");
             }
 
+            for (int i = 0; i < secondStringSet.Count; i++)
+            {
+                DataStorage.RemovePairFromStorage("secondStringSet" + i);
+            }
+
             secondStringSet.Clear();
-            DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
+            DataStorage.RemovePairFromStorage("secondStringSetCount");
             await ReplyAsync("Emptied the set!");
         }
         #endregion
 
         #region Third String Set
-        [Command("AddToThirdString"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
-        public async Task AddToThirdStringAsync(string name)
+        [Command("AddToThirdStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
+        public async Task AddToThirdStringSetAsync(string name)
         {
             var user = Context.User;
             thirdStringSet.Add(name);
 
-            DataStorage.AddPairToStorage(string.Format("thirdStringSet" + (thirdStringSet.Count - 1)), thirdStringSet[thirdStringSet.Count - 1]);
+            for (int i = 0; i < thirdStringSet.Count; i++)
+            {
+                DataStorage.AddPairToStorage(string.Format("thirdStringSet" + i), thirdStringSet[i]);
+            }
+
             DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
 
             await ReplyAsync($"{user.Mention} has added \"{name}\" to be the third part of the role to be edited!");
@@ -428,20 +426,18 @@ namespace Weebot.Modules
         [Command("WipeThirdStringSet"), RequireUserPermission(GuildPermission.ManageRoles), RequireBotPermission(ChannelPermission.SendMessages)]
         public async Task WipeThirdStringSetAsync()
         {
-            if (thirdStringSet.Count > 0)
-            {
-                for (int i = 0; i < thirdStringSet.Count; i++)
-                {
-                    DataStorage.RemovePairFromStorage("thirdStringSet" + i);
-                }
-            }
-            else
+            if (thirdStringSet.Count == 0)
             {
                 await ReplyAsync("Set is already empty!");
             }
 
+            for (int i = 0; i < thirdStringSet.Count; i++)
+            {
+                DataStorage.RemovePairFromStorage("thirdStringSet" + i);
+            }
+
             thirdStringSet.Clear();
-            DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
+            DataStorage.RemovePairFromStorage("thirdStringSetCount");
             await ReplyAsync("Emptied the set!");
         }
         #endregion

@@ -84,13 +84,5 @@ namespace Weebot
 
             return null;
         }
-
-        public static void WipeFile()
-        {
-            if (File.Exists(dataFile))
-            {
-                File.Delete(dataFile);
-            }
-        }
     }
 }
