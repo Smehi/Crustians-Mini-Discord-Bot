@@ -33,15 +33,15 @@ namespace Weebot.Modules
                                                 "`GetCurrentRole`")
                 .AddField("First String Set",   "`AddToFirstStringSet <string>` " +
                                                 "`GetFirstStringSet` " +
-                                                "`RemoveFromFirstStringSet <index>`" +
+                                                "`RemoveFromFirstStringSet <index>` " +
                                                 "`WipeFirstStringSet`")
                 .AddField("Second String Set",  "`AddToSecondStringSet <string>` " +
                                                 "`GetSecondStringSet` " +
-                                                "`RemoveFromSecondStringSet <index>`" +
+                                                "`RemoveFromSecondStringSet <index>` " +
                                                 "`WipeSecondStringSet`")
                 .AddField("Third String Set",   "`AddToThirdStringSet <string>` " +
                                                 "`GetThirdStringSet` " +
-                                                "`RemoveFromThirdStringSet <index>`" +
+                                                "`RemoveFromThirdStringSet <index>` " +
                                                 "`WipeThirdStringSet`")
                 .AddField("Timer",              "`StartNewTimer` " +
                                                 "`SetTimerInterval <time>`")
