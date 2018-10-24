@@ -253,7 +253,6 @@ namespace Weebot.Modules
                 for (int i = 0; i < firstStringSet.Count; i++)
                 {
                     DataStorage.RemovePairFromStorage("firstStringSet" + i);
-                    firstStringSet.RemoveAt(i);
                 }    
             }
             else
@@ -261,6 +260,7 @@ namespace Weebot.Modules
                 await ReplyAsync("Set is already empty!");
             }
 
+            firstStringSet.Clear();
             DataStorage.AddPairToStorage("firstStringSetCount", firstStringSet.Count.ToString());
             await ReplyAsync("Emptied the set!");
         }
@@ -343,7 +343,6 @@ namespace Weebot.Modules
                 for (int i = 0; i < secondStringSet.Count; i++)
                 {
                     DataStorage.RemovePairFromStorage("secondStringSet" + i);
-                    secondStringSet.RemoveAt(i);
                 }
             }
             else
@@ -351,6 +350,7 @@ namespace Weebot.Modules
                 await ReplyAsync("Set is already empty!");
             }
 
+            secondStringSet.Clear();
             DataStorage.AddPairToStorage("secondStringSetCount", secondStringSet.Count.ToString());
             await ReplyAsync("Emptied the set!");
         }
@@ -433,7 +433,6 @@ namespace Weebot.Modules
                 for (int i = 0; i < thirdStringSet.Count; i++)
                 {
                     DataStorage.RemovePairFromStorage("thirdStringSet" + i);
-                    thirdStringSet.RemoveAt(i);
                 }
             }
             else
@@ -441,6 +440,7 @@ namespace Weebot.Modules
                 await ReplyAsync("Set is already empty!");
             }
 
+            thirdStringSet.Clear();
             DataStorage.AddPairToStorage("thirdStringSetCount", thirdStringSet.Count.ToString());
             await ReplyAsync("Emptied the set!");
         }
